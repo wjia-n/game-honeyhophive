@@ -386,6 +386,16 @@ class _MenuScreenState extends State<MenuScreen> {
     final c = widget.config;
     final L = layoutConfig;
     final col = <Widget>[];
+    // top-right chip lives IN FLOW (first row, right-aligned) instead of a
+    // Positioned overlay at _topPad(): the overlay sat exactly on the title
+    // row and obscured long/centred titles (geargallop: chip covered
+    // 'GEAR GALLOP'). In flow it can never overlap anything; _cornerSafe
+    // keeps it clear of a top-corner badge when both are present.
+    if (L.chipPos == 'top-right') {
+      col.add(_cornerSafe(
+          Align(alignment: Alignment.centerRight, child: _chip())));
+      col.add(const SizedBox(height: 14));
+    }
     if (L.logoPos == 'above') {
       col.add(Align(alignment: _align(L.titleAlign), child: _logo(c)));
       col.add(const SizedBox(height: 14));
@@ -478,27 +488,28 @@ class _MenuScreenState extends State<MenuScreen> {
     if (L.logoPos == 'top-corner') {
       overlays.add(Positioned(top: 12, right: 16, child: _logo(c)));
     }
-    if (L.chipPos == 'top-right') {
-      // If the logo already owns the top-right corner, drop the chip below it.
-      final top = L.logoPos == 'top-corner' ? _topPad() + 120 : _topPad();
-      overlays.add(Positioned(top: top, right: 16, child: _chip()));
-    }
     if (L.motif == 'bg-scatter') {
+      // IgnorePointer: these faint decor emojis sit ON TOP of the scroll
+      // content in the Stack and their Text boxes absorb taps (moonmover:
+      // the left emoji covered the SUPPORT button centre, so SUPPORT taps
+      // did nothing while corner taps worked). Decor must never eat input.
       overlays.addAll([
         Positioned(
             left: 24,
             top: 420,
-            child: Opacity(
-                opacity: 0.10,
-                child: Text(c.bgEmoji,
-                    style: const TextStyle(fontSize: 72, fontFamilyFallback: _emojiFb)))),
+            child: IgnorePointer(
+                child: Opacity(
+                    opacity: 0.10,
+                    child: Text(c.bgEmoji,
+                        style: const TextStyle(fontSize: 72, fontFamilyFallback: _emojiFb))))),
         Positioned(
             right: 20,
             top: 620,
-            child: Opacity(
-                opacity: 0.10,
-                child: Text(c.bgEmoji,
-                    style: const TextStyle(fontSize: 56, fontFamilyFallback: _emojiFb)))),
+            child: IgnorePointer(
+                child: Opacity(
+                    opacity: 0.10,
+                    child: Text(c.bgEmoji,
+                        style: const TextStyle(fontSize: 56, fontFamilyFallback: _emojiFb))))),
       ]);
     }
     if (L.motif == 'top-band') {
